@@ -1,6 +1,7 @@
 package com.example.plugins
 
 import com.example.routes.clientDebtsRouting
+import com.example.routes.clientRemindersRouting
 import com.example.routes.clientRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -13,5 +14,6 @@ fun Application.configureRouting() {
         }
         clientRouting()
         clientDebtsRouting()
+        clientRemindersRouting()
     }
 }

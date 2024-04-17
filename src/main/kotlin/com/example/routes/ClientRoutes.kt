@@ -3,6 +3,7 @@ package com.example.routes
 import com.example.models.Client
 import com.example.models.Debt
 import com.example.repositories.DebtRepository
+import com.example.repositories.ReminderRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -101,6 +102,32 @@ fun Route.clientDebtsRouting() {
             val updatedDebt = call.receive<Debt>()
             DebtRepository.updateDebt(clientId, debtId, updatedDebt)
             call.respondText("Deuda actualizada correctamente", status = HttpStatusCode.OK)
+        }
+    }
+}
+
+// Funcion que maneja las rutas de los recordatorios de un cliente
+fun Route.clientRemindersRouting() {
+    route("/client/{clientId}/reminders") {
+        // Muestra los recordatorios de un cliente
+        get {
+            val clientId = call.parameters["clientId"]?.toIntOrNull()
+            if (clientId == null) {
+                call.respondText(
+                    "Cliente ID no válido",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+            val clientReminders = ReminderRepository.getRemindersByClientId(clientId)
+            if (clientReminders.isNotEmpty()) {
+                call.respond(clientReminders)
+            } else {
+                call.respondText(
+                    "No se encontraron recordatorios para el cliente con ID $clientId",
+                    status = HttpStatusCode.NotFound
+                )
+            }
         }
     }
 }

@@ -8,5 +8,5 @@ data class Reminder(
     val message: String,
     val date: String,
     val endReminder: Boolean,
-    val idDebt: Int
+    val idClient: Int
 )
