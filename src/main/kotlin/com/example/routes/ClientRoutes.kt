@@ -2,8 +2,10 @@ package com.example.routes
 
 import com.example.models.Client
 import com.example.models.Debt
+import com.example.repositories.CardRepository
 import com.example.repositories.DebtRepository
 import com.example.repositories.ReminderRepository
+import com.example.repositories.SubscriptionRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -15,6 +17,7 @@ private val clients = mutableListOf(
     Client(2, "Maria", "Lopez", "ml@gmail.com", "0987654321"),
 )
 
+// Funcion que maneja las rutas de los clientes
 fun Route.clientRouting() {
     route("/client") {
         get {
@@ -58,6 +61,7 @@ fun Route.clientRouting() {
     }
 }
 
+// Funcion que maneja las rutas de las deudas de un cliente
 fun Route.clientDebtsRouting() {
     route("/client/{clientId}/debts") {
         // Muestra las deudas de un cliente
@@ -125,6 +129,58 @@ fun Route.clientRemindersRouting() {
             } else {
                 call.respondText(
                     "No se encontraron recordatorios para el cliente con ID $clientId",
+                    status = HttpStatusCode.NotFound
+                )
+            }
+        }
+    }
+}
+
+// Funcion que maneja las rutas de las tarjetas de un cliente
+fun Route.clientCardsRouting() {
+    route("/client/{clientId}/cards") {
+        // Muestra las tarjetas de un cliente
+        get {
+            val clientId = call.parameters["clientId"]?.toIntOrNull()
+            if (clientId == null) {
+                call.respondText(
+                    "Cliente ID no válido",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+            val clientCards = CardRepository.getCardsByClientId(clientId)
+            if (clientCards.isNotEmpty()) {
+                call.respond(clientCards)
+            } else {
+                call.respondText(
+                    "No se encontraron tarjetas para el cliente con ID $clientId",
+                    status = HttpStatusCode.NotFound
+                )
+            }
+        }
+    }
+}
+
+// Funcion que maneja las rutas de los suscripciones de un cliente
+fun Route.clientSubscriptionsRouting() {
+    route("/client/{clientId}/subscriptions") {
+        // Muestra las suscripciones de un cliente
+        get {
+            val clientId = call.parameters["clientId"]?.toIntOrNull()
+            if (clientId == null) {
+                call.respondText(
+                    "Cliente ID no válido",
+                    status = HttpStatusCode.BadRequest
+                )
+                return@get
+            }
+            val clientSubscriptions = SubscriptionRepository.getSubscriptionsByClientId(clientId)
+            if (clientSubscriptions.isNotEmpty()) {
+                call.respond(clientSubscriptions)
+            } else {
+                call.respondText(
+                    "No se encontraron suscripciones para el cliente con ID $clientId",
                     status = HttpStatusCode.NotFound
                 )
             }

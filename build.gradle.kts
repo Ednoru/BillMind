@@ -34,6 +34,11 @@ dependencies {
     implementation("io.ktor:ktor-server-swagger-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+    //Base de datos
+    //implementation("org.jetbrains.exposed:exposed-dao:0.48.6")
+    //implementation("mysql:mysql-connector-java:8.0.33")
+    //implementation("com.zaxxer:HikariCP:5.1.0")
+    //Test
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

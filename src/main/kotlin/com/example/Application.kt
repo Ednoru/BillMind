@@ -12,6 +12,20 @@ fun main() {
         host = "127.0.0.1",
         module = Application::module)
         .start(wait = true)
+
+    // Configuración de la conexión a la base de datos
+    /*val config = HikariConfig().apply {
+        jdbcUrl = "jdbc:mysql://localhost:3306/nombre_basedatos"
+        driverClassName = "com.mysql.cj.jdbc.Driver"
+        username = "usuario"
+        password = "contraseña"
+        maximumPoolSize = 10
+    }
+
+    // Inicialización de la conexión a la base de datos
+    Database.connect(HikariDataSource(config))
+
+    */
 }
 
 fun Application.module() {
