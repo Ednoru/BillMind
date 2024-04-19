@@ -1,33 +1,70 @@
 package com.example.repositories
 
 import com.example.models.Client
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object ClientRepository {
-    private val clients = mutableListOf(
-        Client(1, "Juan", "Perez", "jp@gmail.com", "1234567890"),
-        Client(2, "Maria", "Lopez", "ml@gmail.com", "0987654321"),
-    )
-
-    fun addClient(client: Client) {
-        clients.add(client)
+    private object client : Table() {
+        val id = integer("id").autoIncrement()
+        val name = varchar("name", 100)
+        val lastName = varchar("last_name", 100)
+        val mail = varchar("mail", 100)
+        val phone = varchar("phone", 100)
     }
 
-    fun getClient(id: Int): Client? {
-        return clients.find { it.id == id }
+    private fun resultRowToClient(row: ResultRow): Client {
+        return Client(
+            id = row[client.id],
+            name = row[client.name],
+            lastName = row[client.lastName],
+            mail = row[client.mail],
+            phone = row[client.phone]
+        )
     }
 
-    fun getClients(): List<Client> {
-        return clients
-    }
-
-    fun updateClient(id: Int, client: Client) {
-        val index = clients.indexOfFirst { it.id == id }
-        if (index != -1) {
-            clients[index] = client
+    // Funcion para obtener todos los clientes
+    fun getAllClients(): List<Client> {
+        return transaction {
+            client.selectAll().map { resultRowToClient(it) }
         }
     }
 
-    fun deleteClient(id: Int) {
-        clients.removeIf { it.id == id }
+    // Funcion para obtener un cliente por su id
+    fun getClientById(clientId: Int): Client? {
+        return transaction {
+            client.select { client.id eq clientId }.map { resultRowToClient(it) }.firstOrNull()
+        }
     }
+
+    // Funcion para agregar un cliente
+    fun addClient(client: Client) {
+        transaction {
+            ClientRepository.client.insert {
+                it[name] = client.name
+                it[lastName] = client.lastName
+                it[mail] = client.mail
+                it[phone] = client.phone
+            }
+        }
+    }
+
+    // Funcion para actualizar un cliente
+    fun updateClient(client: Client) {
+        transaction {
+            ClientRepository.client.update({ ClientRepository.client.id eq client.id }) {
+                it[name] = client.name
+                it[lastName] = client.lastName
+                it[mail] = client.mail
+                it[phone] = client.phone
+            }
+        }
+    }
+
+    // Funcion para eliminar un cliente por su id
+    /*fun deleteClientById(clientId: Int) {
+        transaction {
+            Clients.deleteWhere { Clients.id eq clientId }
+        }
+    }*/
 }

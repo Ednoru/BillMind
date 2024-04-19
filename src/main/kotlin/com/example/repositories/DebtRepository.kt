@@ -1,24 +1,79 @@
 package com.example.repositories
 
 import com.example.models.Debt
-import java.lang.Boolean.FALSE
-import java.lang.Boolean.TRUE
+import com.example.repositories.DebtRepository.debts.clientId
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object DebtRepository {
-    private val debts = mutableListOf<Debt>(
-        Debt(1, "Tarjeta de crédito", "2024-05-10", 150.25, "Pago mínimo", FALSE, 1),
-        Debt(2, "Préstamo personal", "2024-06-15", 500.00, "Cuota mensual", TRUE, 2),
-        Debt(3, "Factura de luz", "2024-04-20", 75.50, "Consumo del mes", FALSE, 2),
-    )
-
-    fun getDebtsByClientId(clientId: Int): List<Debt> {
-        return debts.filter { it.idClient == clientId }
+    private object debts : Table() {
+        val id = integer("id").autoIncrement()
+        val clientId = integer("Client_id")
+        val name = varchar("name", 100)
+        val expiration =  varchar("expiration", 100)
+        val amount = varchar("amount", 100)
+        val description = varchar("description", 100)
+        val relevance = varchar("relevance", 100)
     }
 
-    fun updateDebt(clientId: Int, debtId: Int, updatedDebt: Debt) {
-        val index = debts.indexOfFirst { it.id == debtId }
-        if (index != -1) {
-            debts[index] = updatedDebt.copy(id = debtId, idClient = clientId)
+    private fun resultRowToDebt(row: ResultRow): Debt {
+        return Debt(
+            id = row[debts.id],
+            idClient = row[clientId],
+            name = row[debts.name],
+            expiration = row[debts.expiration],
+            amount = row[debts.amount],
+            description = row[debts.description],
+            relevance = row[debts.relevance]
+        )
+    }
+
+    // Funcion que obtiene todas las deudas
+    fun getAllDebts(): List<Debt> {
+        return transaction {
+            debts.selectAll().map { resultRowToDebt(it) }
+        }
+    }
+
+    // Funcion que obtiene una deuda por su id
+    fun getDebtById(debtId: Int): Debt? {
+        return transaction {
+            debts.select { debts.id eq debtId }.map { resultRowToDebt(it) }.firstOrNull()
+        }
+    }
+
+    // Funcion que agrega una deuda
+    fun addDebt(debt: Debt) {
+        transaction {
+            DebtRepository.debts.insert {
+                it[clientId] = debt.idClient
+                it[name] = debt.name
+                it[expiration] = debt.expiration
+                it[amount] = debt.amount
+                it[description] = debt.description
+                it[relevance] = debt.relevance
+            }
+        }
+    }
+
+    // Funcion que actualiza una deuda
+    fun updateDebt(debt: Debt) {
+        transaction {
+            DebtRepository.debts.update({ DebtRepository.debts.id eq debt.id }) {
+                it[clientId] = debt.idClient
+                it[name] = debt.name
+                it[expiration] = debt.expiration
+                it[amount] = debt.amount
+                it[description] = debt.description
+                it[relevance] = debt.relevance
+            }
+        }
+    }
+
+    // Funcion que obtiene todas las deudas de un cliente
+    fun getDebtsByClientId(clientId: Int): List<Debt> {
+        return transaction {
+            debts.select { debts.clientId eq clientId }.map { resultRowToDebt(it) }
         }
     }
 }

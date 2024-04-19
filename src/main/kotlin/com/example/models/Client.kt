@@ -8,4 +8,5 @@ data class Client(
     val name: String,
     val lastName: String,
     val mail: String,
-    val phone: String)
+    val phone: String,
+)

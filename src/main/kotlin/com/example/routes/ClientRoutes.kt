@@ -1,189 +1,115 @@
 package com.example.routes
 
 import com.example.models.Client
-import com.example.models.Debt
-import com.example.repositories.CardRepository
-import com.example.repositories.DebtRepository
-import com.example.repositories.ReminderRepository
-import com.example.repositories.SubscriptionRepository
+import com.example.repositories.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-private val clients = mutableListOf(
-    Client(1, "Juan", "Perez", "jp@gmail.com", "1234567890"),
-    Client(2, "Maria", "Lopez", "ml@gmail.com", "0987654321"),
-)
+fun Routing.clientRouting() {
+    route("/v1/clients") {
 
-// Funcion que maneja las rutas de los clientes
-fun Route.clientRouting() {
-    route("/client") {
+        // GET /v1/clients
         get {
-            if(clients.isNotEmpty()) {
-                call.respond(clients)
+            val clients = ClientRepository.getAllClients()
+            call.respond(clients)
+        }
+
+        // GET /v1/clients/{clientId}
+        get("/{clientId}") {
+            val clientId = call.parameters["clientId"]?.toIntOrNull()
+            if (clientId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
+                return@get
+            }
+            val client = ClientRepository.getClientById(clientId)
+            if (client == null) {
+                call.respond(HttpStatusCode.NotFound, "Client not found")
             } else {
-                call.respondText("No clients found", status = HttpStatusCode.OK)
+                call.respond(client)
             }
         }
 
-        get("{id?}") {
-            val id = call.parameters["id"] ?: return@get call.respondText(
-                "Missing or malformed id",
-                status = HttpStatusCode.BadRequest
-            )
-            val client = clients.find { it.id == id.toInt() } ?: return@get call.respondText(
-                "No client with id $id",
-                status = HttpStatusCode.NotFound
-            )
-            call.respond(client)
-        }
-
+        // POST /v1/clients
         post {
             val client = call.receive<Client>()
-            clients.add(client)
-            call.respondText("Client stored correctly", status = HttpStatusCode.Created)
+            ClientRepository.addClient(client)
+            call.respond(HttpStatusCode.Created)
         }
 
-        delete("{id?}") {
-            val id = call.parameters["id"] ?: return@delete call.respondText(
-                "Id no encontrado",
-                status = HttpStatusCode.BadRequest
-            )
-            if(clients.removeIf { it.id == id.toInt() }) {
-                call.respondText("Cliente removido correctamente", status = HttpStatusCode.OK)
-            } else {
-                call.respondText("Not found", status = HttpStatusCode.NotFound)
-            }
-
-        }
-    }
-}
-
-// Funcion que maneja las rutas de las deudas de un cliente
-fun Route.clientDebtsRouting() {
-    route("/client/{clientId}/debts") {
-        // Muestra las deudas de un cliente
-        get {
+        // PUT /v1/clients/{clientId}
+        put("/{clientId}") {
             val clientId = call.parameters["clientId"]?.toIntOrNull()
             if (clientId == null) {
-                call.respondText(
-                    "Cliente ID no válido",
-                    status = HttpStatusCode.BadRequest
-                )
-                return@get
-            }
-            val clientDebts = DebtRepository.getDebtsByClientId(clientId)
-            if (clientDebts.isNotEmpty()) {
-                call.respond(clientDebts)
-            } else {
-                call.respondText(
-                    "No se encontraron deudas para el cliente con ID $clientId",
-                    status = HttpStatusCode.NotFound
-                )
-            }
-        }
-        // Cambia algun detalle de la deuda del cliente
-        put("{debtId}") {
-            val clientId = call.parameters["clientId"]?.toIntOrNull()
-            val debtId = call.parameters["debtId"]?.toIntOrNull()
-            if (clientId == null || debtId == null) {
-                call.respondText(
-                    "Cliente ID o Deuda ID no válido",
-                    status = HttpStatusCode.BadRequest
-                )
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
                 return@put
             }
-            val debt = DebtRepository.getDebtsByClientId(clientId).find { it.id == debtId }
-            if (debt == null) {
-                call.respondText(
-                    "No se encontró la deuda con ID $debtId para el cliente con ID $clientId",
-                    status = HttpStatusCode.NotFound
-                )
+            val client = call.receive<Client>()
+            if (client.id != clientId) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id in body")
                 return@put
             }
-            val updatedDebt = call.receive<Debt>()
-            DebtRepository.updateDebt(clientId, debtId, updatedDebt)
-            call.respondText("Deuda actualizada correctamente", status = HttpStatusCode.OK)
+            ClientRepository.updateClient(client)
+            call.respond(HttpStatusCode.OK)
         }
-    }
-}
 
-// Funcion que maneja las rutas de los recordatorios de un cliente
-fun Route.clientRemindersRouting() {
-    route("/client/{clientId}/reminders") {
-        // Muestra los recordatorios de un cliente
-        get {
+        // DELETE /v1/clients/{clientId}
+        /*
+        delete("/{clientId}") {
             val clientId = call.parameters["clientId"]?.toIntOrNull()
             if (clientId == null) {
-                call.respondText(
-                    "Cliente ID no válido",
-                    status = HttpStatusCode.BadRequest
-                )
-                return@get
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
+                return@delete
             }
-            val clientReminders = ReminderRepository.getRemindersByClientId(clientId)
-            if (clientReminders.isNotEmpty()) {
-                call.respond(clientReminders)
-            } else {
-                call.respondText(
-                    "No se encontraron recordatorios para el cliente con ID $clientId",
-                    status = HttpStatusCode.NotFound
-                )
-            }
+            ClientRepository.deleteClient(clientId)
+            call.respond(HttpStatusCode.OK)
         }
-    }
-}
+        */
 
-// Funcion que maneja las rutas de las tarjetas de un cliente
-fun Route.clientCardsRouting() {
-    route("/client/{clientId}/cards") {
-        // Muestra las tarjetas de un cliente
-        get {
+        // GET /v1/clients/{clientId}/debts
+        get("/{clientId}/debts") {
             val clientId = call.parameters["clientId"]?.toIntOrNull()
             if (clientId == null) {
-                call.respondText(
-                    "Cliente ID no válido",
-                    status = HttpStatusCode.BadRequest
-                )
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
                 return@get
             }
-            val clientCards = CardRepository.getCardsByClientId(clientId)
-            if (clientCards.isNotEmpty()) {
-                call.respond(clientCards)
-            } else {
-                call.respondText(
-                    "No se encontraron tarjetas para el cliente con ID $clientId",
-                    status = HttpStatusCode.NotFound
-                )
-            }
+            val debts = DebtRepository.getDebtsByClientId(clientId)
+            call.respond(debts)
         }
-    }
-}
 
-// Funcion que maneja las rutas de los suscripciones de un cliente
-fun Route.clientSubscriptionsRouting() {
-    route("/client/{clientId}/subscriptions") {
-        // Muestra las suscripciones de un cliente
-        get {
+        // GET /v1/clients/{clientId}/reminders
+        get("/{clientId}/reminders") {
             val clientId = call.parameters["clientId"]?.toIntOrNull()
             if (clientId == null) {
-                call.respondText(
-                    "Cliente ID no válido",
-                    status = HttpStatusCode.BadRequest
-                )
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
                 return@get
             }
-            val clientSubscriptions = SubscriptionRepository.getSubscriptionsByClientId(clientId)
-            if (clientSubscriptions.isNotEmpty()) {
-                call.respond(clientSubscriptions)
-            } else {
-                call.respondText(
-                    "No se encontraron suscripciones para el cliente con ID $clientId",
-                    status = HttpStatusCode.NotFound
-                )
+            val reminders = ReminderRepository.getReminderByClientId(clientId)
+            call.respond(reminders)
+        }
+
+        // GET /v1/clients/{clientId}/cards
+        get("/{clientId}/cards") {
+            val clientId = call.parameters["clientId"]?.toIntOrNull()
+            if (clientId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
+                return@get
             }
+            val cards = CardRepository.getCardByClientId(clientId)
+            call.respond(cards)
+        }
+
+        // GET /v1/clients/{clientId}/subscriptions
+        get("/{clientId}/subscriptions") {
+            val clientId = call.parameters["clientId"]?.toIntOrNull()
+            if (clientId == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid client id")
+                return@get
+            }
+            val subscriptions = SubscriptionRepository.getSubscriptionByClientId(clientId)
+            call.respond(subscriptions)
         }
     }
 }
