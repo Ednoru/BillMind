@@ -1,12 +1,12 @@
 package com.example.repositories
 
 import com.example.models.Reminder
-import com.example.repositories.ReminderRepository.reminder.clientId
+import com.example.repositories.ReminderRepository.Reminder.clientId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object ReminderRepository {
-    private object reminder : Table() {
+    private object Reminder : Table() {
         val id = integer("id").autoIncrement()
         val clientId = integer("Client_id")
         val message = varchar("name", 100)
@@ -14,34 +14,34 @@ object ReminderRepository {
         val endReminder = varchar("end_reminder", 100)
     }
 
-    private fun resultRowToReminder(row: ResultRow): Reminder {
+    private fun resultRowToReminder(row: ResultRow): com.example.models.Reminder {
         return Reminder(
-            id = row[reminder.id],
+            id = row[Reminder.id],
             idClient = row[clientId],
-            message = row[reminder.message],
-            date = row[reminder.date],
-            endReminder = row[reminder.endReminder]
+            message = row[Reminder.message],
+            date = row[Reminder.date],
+            endReminder = row[Reminder.endReminder]
         )
     }
 
     // Funcion que obtiene todos los recordatorios
-    fun getAllReminders(): List<Reminder> {
+    fun getAllReminders(): List<com.example.models.Reminder> {
         return transaction {
-            reminder.selectAll().map { resultRowToReminder(it) }
+            Reminder.selectAll().map { resultRowToReminder(it) }
         }
     }
 
     // Funcion que obtiene un recordatorio por su id
-    fun getReminderById(reminderId: Int): Reminder? {
+    fun getReminderById(reminderId: Int): com.example.models.Reminder? {
         return transaction {
-            reminder.select { reminder.id eq reminderId }.map { resultRowToReminder(it) }.firstOrNull()
+            Reminder.select { Reminder.id eq reminderId }.map { resultRowToReminder(it) }.firstOrNull()
         }
     }
 
     // Funcion que agrega un recordatorio
-    fun addReminder(reminder: Reminder) {
+    fun addReminder(reminder: com.example.models.Reminder) {
         transaction {
-            ReminderRepository.reminder.insert {
+            ReminderRepository.Reminder.insert {
                 it[clientId] = reminder.idClient
                 it[message] = reminder.message
                 it[date] = reminder.date
@@ -51,9 +51,9 @@ object ReminderRepository {
     }
 
     // Funcion que actualiza un recordatorio
-    fun updateReminder(reminder: Reminder) {
+    fun updateReminder(reminder: com.example.models.Reminder) {
         transaction {
-            ReminderRepository.reminder.update({ ReminderRepository.reminder.id eq reminder.id }) {
+            ReminderRepository.Reminder.update({ ReminderRepository.Reminder.id eq reminder.id }) {
                 it[clientId] = reminder.idClient
                 it[message] = reminder.message
                 it[date] = reminder.date
@@ -63,9 +63,9 @@ object ReminderRepository {
     }
 
     // Funcion que obtiene todos los recordatorios de un cliente
-    fun getReminderByClientId(clientId: Int): List<Reminder> {
+    fun getReminderByClientId(clientId: Int): List<com.example.models.Reminder> {
         return transaction {
-            reminder.select { reminder.clientId eq clientId }.map { resultRowToReminder(it) }
+            Reminder.select { Reminder.clientId eq clientId }.map { resultRowToReminder(it) }
         }
     }
 }

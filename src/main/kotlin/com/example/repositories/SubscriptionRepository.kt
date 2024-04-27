@@ -1,12 +1,12 @@
 package com.example.repositories
 
 import com.example.models.Subscription
-import com.example.repositories.SubscriptionRepository.subscription.clientId
+import com.example.repositories.SubscriptionRepository.Subscription.clientId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SubscriptionRepository {
-    private object subscription : Table() {
+    private object Subscription : Table() {
         val id = integer("id").autoIncrement()
         val clientId = integer("Client_id")
         val type = varchar("type", 100)
@@ -14,34 +14,34 @@ object SubscriptionRepository {
         val endDate = varchar("end_date", 100)
     }
 
-    private fun resultRowToSubscription(row: ResultRow): Subscription {
+    private fun resultRowToSubscription(row: ResultRow): com.example.models.Subscription {
         return Subscription(
-            id = row[subscription.id],
+            id = row[Subscription.id],
             idClient = row[clientId],
-            type = row[subscription.type],
-            initialDate = row[subscription.initialDate],
-            endDate = row[subscription.endDate]
+            type = row[Subscription.type],
+            initialDate = row[Subscription.initialDate],
+            endDate = row[Subscription.endDate]
         )
     }
 
     // Funcion que obtiene todas las suscripciones
-    fun getAllSubscriptions(): List<Subscription> {
+    fun getAllSubscriptions(): List<com.example.models.Subscription> {
         return transaction {
-            subscription.selectAll().map { resultRowToSubscription(it) }
+            Subscription.selectAll().map { resultRowToSubscription(it) }
         }
     }
 
     // Funcion que obtiene una suscripcion por su id
-    fun getSubscriptionById(subscriptionId: Int): Subscription? {
+    fun getSubscriptionById(subscriptionId: Int): com.example.models.Subscription? {
         return transaction {
-            subscription.select { subscription.id eq subscriptionId }.map { resultRowToSubscription(it) }.firstOrNull()
+            Subscription.select { Subscription.id eq subscriptionId }.map { resultRowToSubscription(it) }.firstOrNull()
         }
     }
 
     // Funcion que agrega una suscripcion
-    fun addSubscription(subscription: Subscription) {
+    fun addSubscription(subscription: com.example.models.Subscription) {
         transaction {
-            SubscriptionRepository.subscription.insert {
+            SubscriptionRepository.Subscription.insert {
                 it[clientId] = subscription.idClient
                 it[type] = subscription.type
                 it[initialDate] = subscription.initialDate
@@ -51,9 +51,9 @@ object SubscriptionRepository {
     }
 
     // Funcion que actualiza una suscripcion
-    fun updateSubscription(subscription: Subscription) {
+    fun updateSubscription(subscription: com.example.models.Subscription) {
         transaction {
-            SubscriptionRepository.subscription.update({ SubscriptionRepository.subscription.id eq subscription.id }) {
+            SubscriptionRepository.Subscription.update({ SubscriptionRepository.Subscription.id eq subscription.id }) {
                 it[clientId] = subscription.idClient
                 it[type] = subscription.type
                 it[initialDate] = subscription.initialDate
@@ -63,9 +63,9 @@ object SubscriptionRepository {
     }
 
     // Funcion que obtiene la suscripcion de un cliente
-    fun getSubscriptionByClientId(clientId: Int): List<Subscription> {
+    fun getSubscriptionByClientId(clientId: Int): List<com.example.models.Subscription> {
         return transaction {
-            subscription.select { subscription.clientId eq clientId }.map { resultRowToSubscription(it) }
+            Subscription.select { Subscription.clientId eq clientId }.map { resultRowToSubscription(it) }
         }
     }
 }

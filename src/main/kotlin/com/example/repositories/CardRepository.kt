@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object CardRepository {
-    private object card : Table() {
+    private object Card : Table() {
         val id = integer("id").autoIncrement()
         val clientId = integer("Client_id")
         val cardName = varchar("card_name", 100)
@@ -13,34 +13,34 @@ object CardRepository {
         val expirationDate = varchar("expiration_date", 100)
     }
 
-    private fun resultRowToCard(row: ResultRow): Card {
+    private fun resultRowToCard(row: ResultRow): com.example.models.Card {
         return Card(
-            id = row[card.id],
-            idClient = row[card.clientId],
-            cardName = row[card.cardName],
-            cardNumber = row[card.cardNumber],
-            expirationDate = row[card.expirationDate]
+            id = row[Card.id],
+            idClient = row[Card.clientId],
+            cardName = row[Card.cardName],
+            cardNumber = row[Card.cardNumber],
+            expirationDate = row[Card.expirationDate]
         )
     }
 
     // Funcion que obtiene todas las tarjetas
-    fun getAllCards(): List<Card> {
+    fun getAllCards(): List<com.example.models.Card> {
         return transaction {
-            card.selectAll().map { resultRowToCard(it) }
+            Card.selectAll().map { resultRowToCard(it) }
         }
     }
 
     // Funcion que obtiene una tarjeta por su id
-    fun getCardById(cardId: Int): Card? {
+    fun getCardById(cardId: Int): com.example.models.Card? {
         return transaction {
-            card.select { card.id eq cardId }.map { resultRowToCard(it) }.firstOrNull()
+            Card.select { Card.id eq cardId }.map { resultRowToCard(it) }.firstOrNull()
         }
     }
 
     // Funcion que agrega una tarjeta
-    fun addCard(card: Card) {
+    fun addCard(card: com.example.models.Card) {
         transaction {
-            CardRepository.card.insert {
+            CardRepository.Card.insert {
                 it[clientId] = card.idClient
                 it[cardName] = card.cardName
                 it[cardNumber] = card.cardNumber
@@ -50,9 +50,9 @@ object CardRepository {
     }
 
     // Funcion que actualiza una tarjeta
-    fun updateCard(card: Card) {
+    fun updateCard(card: com.example.models.Card) {
         transaction {
-            CardRepository.card.update({ CardRepository.card.id eq card.id }) {
+            CardRepository.Card.update({ CardRepository.Card.id eq card.id }) {
                 it[clientId] = card.idClient
                 it[cardName] = card.cardName
                 it[cardNumber] = card.cardNumber
@@ -62,9 +62,9 @@ object CardRepository {
     }
 
     // Funcion que obtiene todas las tarjetas de un cliente
-    fun getCardByClientId(clientId: Int): List<Card> {
+    fun getCardByClientId(clientId: Int): List<com.example.models.Card> {
         return transaction {
-            card.select { card.clientId eq clientId }.map { resultRowToCard(it) }
+            Card.select { Card.clientId eq clientId }.map { resultRowToCard(it) }
         }
     }
 }

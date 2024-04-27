@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object ClientRepository {
-    private object client : Table() {
+    private object Client : Table() {
         val id = integer("id").autoIncrement()
         val name = varchar("name", 100)
         val lastName = varchar("last_name", 100)
@@ -13,34 +13,34 @@ object ClientRepository {
         val phone = varchar("phone", 100)
     }
 
-    private fun resultRowToClient(row: ResultRow): Client {
+    private fun resultRowToClient(row: ResultRow): com.example.models.Client {
         return Client(
-            id = row[client.id],
-            name = row[client.name],
-            lastName = row[client.lastName],
-            mail = row[client.mail],
-            phone = row[client.phone]
+            id = row[Client.id],
+            name = row[Client.name],
+            lastName = row[Client.lastName],
+            mail = row[Client.mail],
+            phone = row[Client.phone]
         )
     }
 
     // Funcion para obtener todos los clientes
-    fun getAllClients(): List<Client> {
+    fun getAllClients(): List<com.example.models.Client> {
         return transaction {
-            client.selectAll().map { resultRowToClient(it) }
+            Client.selectAll().map { resultRowToClient(it) }
         }
     }
 
     // Funcion para obtener un cliente por su id
-    fun getClientById(clientId: Int): Client? {
+    fun getClientById(clientId: Int): com.example.models.Client? {
         return transaction {
-            client.select { client.id eq clientId }.map { resultRowToClient(it) }.firstOrNull()
+            Client.select { Client.id eq clientId }.map { resultRowToClient(it) }.firstOrNull()
         }
     }
 
     // Funcion para agregar un cliente
-    fun addClient(client: Client) {
+    fun addClient(client: com.example.models.Client) {
         transaction {
-            ClientRepository.client.insert {
+            ClientRepository.Client.insert {
                 it[name] = client.name
                 it[lastName] = client.lastName
                 it[mail] = client.mail
@@ -50,9 +50,9 @@ object ClientRepository {
     }
 
     // Funcion para actualizar un cliente
-    fun updateClient(client: Client) {
+    fun updateClient(client: com.example.models.Client) {
         transaction {
-            ClientRepository.client.update({ ClientRepository.client.id eq client.id }) {
+            ClientRepository.Client.update({ ClientRepository.Client.id eq client.id }) {
                 it[name] = client.name
                 it[lastName] = client.lastName
                 it[mail] = client.mail
